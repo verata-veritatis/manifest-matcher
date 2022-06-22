@@ -1,0 +1,24 @@
+{
+  "name": "manifest-matcher",
+  "version": "1.0.0",
+  "description": "A simple script for Solana NFTs to force-match the metadata name to the manifest name.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/verata-veritatis/manifest-matcher.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/verata-veritatis/manifest-matcher/issues"
+  },
+  "homepage": "https://github.com/verata-veritatis/manifest-matcher#readme",
+  "dependencies": {
+    "@metaplex-foundation/js": "^0.11.5",
+    "@solana/web3.js": "^1.44.2",
+    "bs58": "^5.0.0"
+  }
+}

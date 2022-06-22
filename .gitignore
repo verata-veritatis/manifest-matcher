@@ -102,3 +102,13 @@ dist
 
 # TernJS port file
 .tern-port
+
+# VS Code nonsense
+.vscode
+*.vscode
+**.vscode
+
+# MacOS UTTER NONSENSE
+.DS_Store
+*.DS_Store
+**.DS_Store
