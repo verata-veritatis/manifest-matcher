@@ -34,24 +34,63 @@ const wallet = Keypair.fromSecretKey(secretKey);
 console.log(`Setting up identity`)
 const metaplex = Metaplex.make(connection).use(keypairIdentity(wallet));
 
+// Function for async sleep.
+const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Function to update metadata. Since Solana likes to throw a lot of errors at times,
+// we need to force retry on error, and keep retrying.
+const update = async (entry) => {
+
+    // Deconstruct the incoming argument.
+    const [index, mint] = entry;
+
+    // We'll first fetch the NFT and metadata from the chain.
+    const nft = await metaplex.nfts().findByMint(new PublicKey(mint));
+
+    // Check to see if the name matches.
+    if (nft.name === nft.metadata.name) {
+        console.log(`(${index + 1}/${mints.length}) — (${mint})\n    ↳ Name is already matching`);
+        return false;
+    } else {
+        console.log(`(${index + 1}/${mints.length}) — (${mint})\n    ↳ Matching ${nft.name} => ${nft.metadata.name}`);
+    }
+
+    // The manifest JSON information is located at nft.metadata. We can simply 
+    // run an update on the current NFT so that it matches the manifest name.
+    // isMutable should be set to null to prevent an error, this is a known
+    // bug and will be fixed in a later iteration of the JS package.
+    while (true) {
+        try {
+            await metaplex.nfts().update(nft, {
+                name: nft.metadata.name,
+                isMutable: null
+            });
+            console.log(`(${index + 1}/${mints.length}) — (${mint})\n    ↳ Matching complete`);
+            break;
+        } catch (e) {
+            console.log(`(${index + 1}/${mints.length}) — (${mint})\n    ↳ ${e}`);
+            continue;
+        }
+    }
+    return true;
+
+}
+
 console.log(`\n~ Running update loop ~`)
 const run = async () => {
 
     // For each mint in the mint list...
-    for (const [index, mint] of mints.entries()) {
+    for (const entry of mints.entries()) {
 
-        // We'll first fetch the NFT and metadata from the chain.
-        const nft = await metaplex.nfts().findByMint(new PublicKey(mint));
-        console.log(`(${index + 1}/${mints.length}) — Matching ${nft.name} => ${nft.metadata.name}`);
+        // Update. We don't need to await, since this will take a while, so we run 
+        // multiple updates concurrently.
+        update(entry);
 
-        // The manifest JSON information is located at nft.metadata. We can simply 
-        // run an update on the current NFT so that it matches the manifest name.
-        // isMutable should be set to null to prevent an error, this is a known
-        // bug and will be fixed in a later iteration of the JS package.
-        await metaplex.nfts().update(nft, {
-            name: nft.metadata.name,
-            isMutable: null
-        });
+        // This is where we determine the amount of time to wait
+        // between iterations. Default is 1 second.
+        await sleep(process.argv[4] || 1000);
 
     };
 
